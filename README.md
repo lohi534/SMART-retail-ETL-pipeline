@@ -5,42 +5,25 @@ An end-to-end, production-grade Data Engineering pipeline designed to ingest, va
 ---
 
 ## 📌 Architecture Overview
-text
-┌──────────────────────────┐
-│   Raw Data Ingestion     │  Synthetic multi-store transaction batches (JSON/CSV)
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│ Data Contracts & Quality │  Pydantic validation schemas
-└─────┬──────────────┬─────┘
-      │ Valid        │ Invalid
-      ▼              ▼
-┌─────────────┐  ┌────────────────────────┐
-│ Enrichment  │  │ Quarantine Audit Log   │  Logged to `rejected_sales_audit`
-└─────┬───────┘  └────────────────────────┘
-      │
-      ▼
-┌──────────────────────────┐
-│  DuckDB Warehouse (OLAP) │  Kimball Star Schema (`fact_sales` + Dimensions)
-└────────────┬─────────────┘
-             │
-             ▼
-┌──────────────────────────┐
-│ Aggregated Business Mart │  `daily_store_performance` (Gross/Net Rev, Basket Size)
-└─────┬──────────────┬─────┘
-      │              │
-      ▼              ▼
-┌───────────┐  ┌───────────┐
-│  Parquet  │  │    CSV    │  Columnar & spreadsheet BI export artifacts
-└─────┬─────┘  └─────┬─────┘
-      └───────┬──────┘
-              ▼
-┌──────────────────────────┐
-│   Streamlit Dashboard    │  Real-time KPI cards, trends, store slicing & audit charts
-└──────────────────────────┘
 
----
+```mermaid
+flowchart TD
+    A[Raw Data Ingestion<br/>Synthetic batches JSON/CSV] --> B[Data Contracts & Quality<br/>Pydantic Validation]
+    
+    B -->|Valid| C[Transformation & Enrichment<br/>Net Revenue & Date Keys]
+    B -->|Invalid| D[(Quarantine Audit Log<br/>rejected_sales_audit)]
+    
+    C --> E[(DuckDB Warehouse<br/>Kimball Star Schema)]
+    
+    E --> F[Aggregated Business Mart<br/>daily_store_performance]
+    
+    F --> G[Parquet Export<br/>Columnar Storage]
+    F --> H[CSV Export<br/>BI & Spreadsheets]
+    
+    G --> I[Streamlit Dashboard<br/>KPIs, Trends & Audits]
+    H --> I
+    E -.-> I
+```
 
 ## 🛠️ Tech Stack & Tooling
 
